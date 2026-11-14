@@ -1,0 +1,278 @@
+{
+  "metadata": {
+    "mission_name": "MSL Curiosity",
+    "center_lon": 137.402,
+    "center_lat": -4.6585,
+    "base_alt_m": -4120.0,
+    "chunk_size_L": 128,
+    "halo_h": 4,
+    "grid_chunks": [
+      3,
+      3
+    ],
+    "global_core_size": 384,
+    "R_ref": 0.4712,
+    "S_grad": 3214.1,
+    "S_lap": 2151.83,
+    "impassable_cliff_pct": 11.09,
+    "usgs_unit_table": {
+      "1": {
+        "code": "lHl",
+        "name": "Lower Hesperian Layered Sulfate Bedrock",
+        "eta_geo": 1.05,
+        "color": "#4ade80"
+      },
+      "2": {
+        "code": "HNu",
+        "name": "Hesperian-Noachian Clay-Bearing Unit",
+        "eta_geo": 1.25,
+        "color": "#60a5fa"
+      },
+      "3": {
+        "code": "Ae",
+        "name": "Amazonian Eolian Sand Sheet / Ripples",
+        "eta_geo": 2.45,
+        "color": "#facc15"
+      },
+      "4": {
+        "code": "Ahv",
+        "name": "Amazonian Boulder-Rich Ridged Unit",
+        "eta_geo": 2.8,
+        "color": "#f87171"
+      }
+    },
+    "cli_selected_target": {
+      "target_lon": 137.404082,
+      "target_lat": -4.6585,
+      "global_rc": [
+        192,
+        315
+      ],
+      "chunk_ij": [
+        1,
+        2
+      ],
+      "local_rc": [
+        64,
+        59
+      ],
+      "requires_chunk_migration": true,
+      "active_chunk_sequence": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ]
+    }
+  },
+  "rover_streetview_waypoints": [
+    {
+      "id": "SOL_3105_HAB",
+      "sol": 3105,
+      "title": "Base Camp Hab & Antenna Mast (+6.5m)",
+      "rel_r": 0.38,
+      "rel_c": 0.37,
+      "camera": "NAVCAM_LEFT",
+      "usgs_code": "lHl",
+      "img_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/03105/opgs/edr/ncam/NLB_673194215EDR_F0880366NCAM00354M_.JPG",
+      "Backup_Wikimedia_URL": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/PIA19912-MarsCuriosityRover-MountSharp-20150909.jpg/1024px-PIA19912-MarsCuriosityRover-MountSharp-20150909.jpg",
+      "heading_deg": 142.0,
+      "fov_deg": 45.0,
+      "caption": "Flat fractured sulfate bedrock (lHl) at Hab landing site; low rock-edge density confirms safe traversal.",
+      "mission": "MSL Curiosity",
+      "global_rc": [
+        146,
+        142
+      ],
+      "chunk_ij": [
+        1,
+        1
+      ],
+      "local_rc": [
+        18,
+        14
+      ],
+      "lon": 137.401154,
+      "lat": -4.657724,
+      "alt_datum_m": -4120.0,
+      "sobel_edge_density": 0.1501,
+      "calibrated_roughness_m": 0.253,
+      "calibration_radius_m": 24.0,
+      "alt_m": -4100.48
+    },
+    {
+      "id": "SOL_3240_WP1_CLAY",
+      "sol": 3240,
+      "title": "CRISM Science WP-1: Phyllosilicate Clay-Sulfate Transition",
+      "rel_r": 0.44,
+      "rel_c": 0.56,
+      "camera": "MASTCAM_RIGHT",
+      "usgs_code": "HNu",
+      "img_url": "https://mars.nasa.gov/msl-raw-images/msss/03240/mcam/3240MR0169450001005123C00_DXXX.jpg",
+      "Backup_Wikimedia_URL": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/PIA24836-MarsCuriosityRover-MountSharp-20210927.jpg/1024px-PIA24836-MarsCuriosityRover-MountSharp-20210927.jpg",
+      "heading_deg": 115.0,
+      "fov_deg": 30.0,
+      "caption": "Finely laminated mudstone and clay-bearing outcrops (HNu); moderate polygonal fracturing.",
+      "mission": "MSL Curiosity",
+      "global_rc": [
+        169,
+        215
+      ],
+      "chunk_ij": [
+        1,
+        1
+      ],
+      "local_rc": [
+        41,
+        87
+      ],
+      "lon": 137.402389,
+      "lat": -4.658112,
+      "alt_datum_m": -4120.0,
+      "sobel_edge_density": 0.479,
+      "calibrated_roughness_m": 0.631,
+      "calibration_radius_m": 24.0,
+      "alt_m": -4112.04
+    },
+    {
+      "id": "SOL_3412_WP2_PEDIMENT",
+      "sol": 3412,
+      "title": "CRISM Science WP-2: Greenheugh Pediment Capping Unit",
+      "rel_r": 0.6,
+      "rel_c": 0.42,
+      "camera": "NAVCAM_RIGHT",
+      "usgs_code": "Ae",
+      "img_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/03412/opgs/edr/ncam/NRB_700449812EDR_F0932416NCAM00259M_.JPG",
+      "Backup_Wikimedia_URL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/PIA20316-MarsCuriosityRover-BagnoldDunes-20151211.jpg/1024px-PIA20316-MarsCuriosityRover-BagnoldDunes-20151211.jpg",
+      "heading_deg": 195.0,
+      "fov_deg": 45.0,
+      "caption": "Wind-rippled dark eolian sand pocket (Ae) bordering sulfate bedrock; high slip risk where I_th < 160 TIU.",
+      "mission": "MSL Curiosity",
+      "global_rc": [
+        230,
+        161
+      ],
+      "chunk_ij": [
+        1,
+        1
+      ],
+      "local_rc": [
+        102,
+        33
+      ],
+      "lon": 137.401475,
+      "lat": -4.659141,
+      "alt_datum_m": -4120.0,
+      "sobel_edge_density": 0.0251,
+      "calibrated_roughness_m": 0.109,
+      "calibration_radius_m": 24.0,
+      "alt_m": -4097.37
+    },
+    {
+      "id": "SOL_3800_WP3_GEDIZ",
+      "sol": 3800,
+      "title": "CRISM Science WP-3: Gediz Vallis Debris Apron",
+      "rel_r": 0.57,
+      "rel_c": 0.61,
+      "camera": "MASTCAM_LEFT",
+      "usgs_code": "Ahv",
+      "img_url": "https://mars.nasa.gov/msl-raw-images/msss/03800/mcam/3800ML1041250001108234C00_DXXX.jpg",
+      "Backup_Wikimedia_URL": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/PIA26018-MarsCuriosityRover-GedizVallisRidge-20230829.jpg/1024px-PIA26018-MarsCuriosityRover-GedizVallisRidge-20230829.jpg",
+      "heading_deg": 88.0,
+      "fov_deg": 35.0,
+      "caption": "Dense angular boulder debris channel (Ahv); high Sobel rock-edge score triggers ground-truth roughness boost.",
+      "mission": "MSL Curiosity",
+      "global_rc": [
+        219,
+        234
+      ],
+      "chunk_ij": [
+        1,
+        1
+      ],
+      "local_rc": [
+        91,
+        106
+      ],
+      "lon": 137.402711,
+      "lat": -4.658956,
+      "alt_datum_m": -4120.0,
+      "sobel_edge_density": 0.8911,
+      "calibrated_roughness_m": 1.105,
+      "calibration_radius_m": 24.0,
+      "alt_m": -4111.09
+    },
+    {
+      "id": "SOL_3950_EAST_SECTOR",
+      "sol": 3950,
+      "title": "Extended EVA Target: East Sulfate Canyon Overlook (Chunk 1,2)",
+      "rel_r": 0.5,
+      "rel_c": 0.82,
+      "camera": "NAVCAM_LEFT",
+      "usgs_code": "lHl",
+      "img_url": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/03950/opgs/edr/ncam/NLB_748210934EDR_F1021104NCAM00320M_.JPG",
+      "Backup_Wikimedia_URL": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/PIA19912-MarsCuriosityRover-MountSharp-20150909.jpg/1024px-PIA19912-MarsCuriosityRover-MountSharp-20150909.jpg",
+      "heading_deg": 75.0,
+      "fov_deg": 45.0,
+      "caption": "Eastern chunk canyon bench beyond central ridge; requires dynamic 3x3 chunk migration.",
+      "mission": "MSL Curiosity",
+      "global_rc": [
+        192,
+        315
+      ],
+      "chunk_ij": [
+        1,
+        2
+      ],
+      "local_rc": [
+        64,
+        59
+      ],
+      "lon": 137.404082,
+      "lat": -4.6585,
+      "alt_datum_m": -4120.0,
+      "sobel_edge_density": 0.1519,
+      "calibrated_roughness_m": 0.255,
+      "calibration_radius_m": 24.0,
+      "alt_m": -4116.78
+    },
+    {
+      "id": "SOL_4080_SOUTH_BASIN",
+      "sol": 4080,
+      "title": "Extended EVA Target: South Upper Mount Sharp Bench (Chunk 2,1)",
+      "rel_r": 0.83,
+      "rel_c": 0.48,
+      "camera": "MASTCAM_RIGHT",
+      "usgs_code": "HNu",
+      "img_url": "https://mars.nasa.gov/msl-raw-images/msss/04080/mcam/4080MR0213980001201432C00_DXXX.jpg",
+      "Backup_Wikimedia_URL": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/PIA24836-MarsCuriosityRover-MountSharp-20210927.jpg/1024px-PIA24836-MarsCuriosityRover-MountSharp-20210927.jpg",
+      "heading_deg": 170.0,
+      "fov_deg": 35.0,
+      "caption": "Southern chunk terraced clay-sulfate bench; demonstrates north-south chunk seam stitching.",
+      "mission": "MSL Curiosity",
+      "global_rc": [
+        319,
+        184
+      ],
+      "chunk_ij": [
+        2,
+        1
+      ],
+      "local_rc": [
+        63,
+        56
+      ],
+      "lon": 137.401865,
+      "lat": -4.660643,
+      "alt_datum_m": -4120.0,
+      "sobel_edge_density": 0.4507,
+      "calibrated_roughness_m": 0.598,
+      "calibration_radius_m": 24.0,
+      "alt_m": -4094.07
+    }
+  ]
+}
