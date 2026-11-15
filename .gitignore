@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Intermediate pipeline cache dumps
+step*_output.npz
+*.tmp
+*.bak
+
+# Virtual environments
+.env.local
+.venv/
+venv/
+ENV/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Large uncropped raw global mosaics (>100MB)
+*.tif.bak

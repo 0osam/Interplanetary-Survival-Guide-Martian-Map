@@ -1,0 +1,35 @@
+{
+  "routing_mode": "multi_settlement",
+  "o2_tank_capacity_L": 25.0,
+  "safety_reserve_factor": 1.15,
+  "default_sample_Step_kg": 10.0,
+  "start_point": {
+    "id": "HAB_START",
+    "name": "Octavia E. Butler Hab (Start / Cycle Anchor)",
+    "lon": 77.4490,
+    "lat": 18.4462
+  },
+  "settlements": [
+    {
+      "id": "SETTLEMENT_1_DELTA",
+      "name": "Three Forks O2 Refill Depot",
+      "lon": 77.4526,
+      "lat": 18.4449,
+      "refill_o2_L": 25.0
+    },
+    {
+      "id": "SETTLEMENT_2_HAWKSBILL",
+      "name": "Hawksbill Gap O2 Relay",
+      "lon": 77.4502,
+      "lat": 18.4426,
+      "refill_o2_L": 25.0
+    },
+    {
+      "id": "SETTLEMENT_3_NERETVA_EAST",
+      "name": "Neretva Bench East Outpost (Chunk 1,2)",
+      "lon": 77.4600,
+      "lat": 18.4449,
+      "refill_o2_L": 25.0
+    }
+  ]
+}

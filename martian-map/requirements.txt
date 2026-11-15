@@ -1,0 +1,28 @@
+# --- Core Numerical, Spatial Indexing & Graph Routing ---
+numpy>=1.26.0
+scipy>=1.11.0
+networkx>=3.2.0
+
+# --- Planetary GeoTIFF, File Geodatabase (.gdb) & Mars CRS ---
+rasterio>=1.3.9
+geopandas>=1.0.0
+pyogrio>=0.9.0
+pyproj>=3.6.1
+shapely>=2.0.2
+affine>=2.4.0
+
+# --- NASA Rover Raw Images API & Sobel Roughness Calibration ---
+requests>=2.31.0
+Pillow>=10.2.0
+
+# --- Jupyter Notebook Execution & Terrain Diagnostics ---
+jupyterlab>=4.1.0
+notebook>=7.1.0
+ipykernel>=6.29.0
+nbconvert>=7.16.0
+nbformat>=5.10.0
+matplotlib>=3.8.0
+
+# --- Optional: Live REST API for On-Click CesiumJS Chunk Migration ---
+fastapi>=0.110.0
+uvicorn>=0.27.0

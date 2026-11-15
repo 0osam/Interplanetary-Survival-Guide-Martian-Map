@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>NASA EVA Handheld Telemetry &amp; Gyro Controller</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --bg-card: rgba(18, 24, 38, 0.95);
+      --border: rgba(148, 163, 184, 0.25);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.4);
+      --ok: #10b981;
+      --warn: #f59e0b;
+      --err: #f43f5e;
+      --gold: #fbbf24;
+      --mars-red: #c1440e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: var(--bg); color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      touch-action: manipulation;
+    }
+    #phoneContainer {
+      display: flex; flex-direction: column; width: 100%; height: 100%;
+      padding: env(safe-area-inset-top, 8px) 12px env(safe-area-inset-bottom, 8px);
+      justify-content: space-between; overflow-y: auto; gap: 8px;
+    }
+
+    /* Top Telemetry Header */
+    .top-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 10px; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; letter-spacing: 0.04em; }
+    .nasa-badge { background: linear-gradient(135deg, #ef4444, #f97316); color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 4px; }
+    .conn-pill {
+      display: flex; align-items: center; gap: 5px; font-size: 10px;
+      padding: 3px 8px; border-radius: 99px; background: rgba(16, 185, 129, 0.15);
+      color: var(--ok); font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: pulseDot 1.5s infinite; }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+
+    /* Security Insecure Context Alert */
+    #securityNotice {
+      display: none; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 10px; padding: 8px 10px; font-size: 10.5px; color: #fde68a; line-height: 1.4;
+    }
+    #securityNotice a { color: var(--accent); font-weight: 700; text-decoration: underline; }
+
+    /* Live Sensor & Link Diagnostics Bar */
+    .diag-bar {
+      display: flex; flex-direction: column; gap: 3px; background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; font-size: 10px;
+    }
+    .diag-row { display: flex; justify-content: space-between; align-items: center; }
+    .diag-val { font-family: monospace; font-weight: 700; color: #f8fafc; }
+
+    /* Gyro Permission & Calibration Action Box */
+    .gyro-action-box {
+      display: flex; flex-direction: column; gap: 6px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(193, 68, 14, 0.20));
+      border: 1.5px solid var(--accent); border-radius: 12px; padding: 10px; text-align: center;
+    }
+    .btn-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 6px; }
+    .gyro-btn {
+      background: #0284c7; color: #fff; border: 1px solid #38bdf8;
+      padding: 9px 12px; border-radius: 8px; font-size: 12px; font-weight: 800;
+      cursor: pointer; box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    .gyro-btn:active { background: #0369a1; }
+    .secondary-btn {
+      background: rgba(30, 41, 59, 0.8); color: #e2e8f0; border: 1px solid #475569;
+      padding: 9px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .secondary-btn:active { background: #334155; }
+
+    /* PFD & Compass Grid */
+    .pfd-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .tele-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center;
+      position: relative; overflow: hidden;
+    }
+    .card-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; font-weight: 700; width: 100%; margin-bottom: 4px; }
+
+    /* Artificial Horizon HUD */
+    #horizonBox {
+      width: 100%; height: 95px; border-radius: 8px; position: relative;
+      overflow: hidden; background: #0b1329; border: 1px solid #1e293b;
+    }
+    #horizonSky {
+      position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: linear-gradient(to bottom, #1e3a8a 50%, #7c2d12 50%);
+      transform-origin: 50% 50%; transition: transform 0.06s linear;
+    }
+    .horizon-reticle {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 44px; height: 16px; pointer-events: none;
+    }
+    .horizon-reticle::before, .horizon-reticle::after {
+      content: ""; position: absolute; top: 7px; width: 14px; height: 2px; background: #fbbf24;
+    }
+    .horizon-reticle::before { left: 0; }
+    .horizon-reticle::after { right: 0; }
+    .reticle-center { position: absolute; top: 6px; left: 20px; width: 4px; height: 4px; border-radius: 50%; background: #fbbf24; }
+    .horizon-meta {
+      position: absolute; bottom: 2px; left: 4px; right: 4px; display: flex; justify-content: space-between;
+      font-size: 8.5px; color: #e2e8f0; font-family: monospace; font-weight: 700;
+      background: rgba(0,0,0,0.6); padding: 1px 4px; border-radius: 3px;
+    }
+
+    /* Compass Rose */
+    #compassBox {
+      width: 100%; height: 95px; border-radius: 8px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      background: #0b1329; border: 1px solid #1e293b;
+    }
+    #compassDial {
+      width: 80px; height: 80px; border-radius: 50%;
+      border: 2px solid var(--border); position: relative;
+      transition: transform 0.06s linear;
+    }
+    .compass-mark {
+      position: absolute; font-size: 8.5px; font-weight: 900; color: #94a3b8;
+      transform: translate(-50%, -50%);
+    }
+    .mark-n { top: 7px; left: 50%; color: #f43f5e; font-size: 10.5px; }
+    .mark-s { bottom: -1px; left: 50%; }
+    .mark-e { top: 50%; right: 1px; }
+    .mark-w { top: 50%; left: 7px; }
+    .compass-needle {
+      position: absolute; top: 15px; left: 50%; width: 2px; height: 50px;
+      background: linear-gradient(to bottom, #f43f5e 50%, #38bdf8 50%);
+      transform: translateX(-50%); border-radius: 1px;
+    }
+    .compass-val {
+      position: absolute; font-size: 12px; font-weight: 800; color: #f8fafc;
+      font-family: monospace; background: rgba(15, 23, 42, 0.85);
+      padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border);
+    }
+
+    /* Manual Touch Heading Slider */
+    .slider-wrap {
+      display: flex; flex-direction: column; gap: 3px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px;
+    }
+    .slider-lbl { display: flex; justify-content: space-between; font-size: 9.5px; color: #94a3b8; font-weight: 700; }
+    input[type="range"] {
+      width: 100%; -webkit-appearance: none; height: 6px; border-radius: 3px; background: #1e293b; outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #38bdf8; cursor: pointer;
+    }
+
+    /* O2 & Status Card */
+    .status-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 8px 10px;
+    }
+    .o2-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+    .o2-bar-track { width: 100%; height: 7px; background: #0f172a; border-radius: 99px; overflow: hidden; margin-bottom: 5px; }
+    .o2-bar-fill { height: 100%; width: 100%; background: var(--ok); transition: width 0.3s, background 0.3s; }
+    .tele-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; font-size: 9px; color: #cbd5e1; }
+    .metric-item { background: rgba(30, 41, 59, 0.5); padding: 3px 5px; border-radius: 5px; }
+    .metric-val { font-weight: 700; color: #fff; font-size: 10.5px; font-family: monospace; }
+
+    /* Motion Controls */
+    .controls-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .mode-switch {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: rgba(15, 23, 42, 0.8);
+      padding: 3px; border-radius: 8px; border: 1px solid var(--border);
+    }
+    .mode-btn {
+      padding: 6px 0; border: none; border-radius: 6px; background: none; color: #94a3b8;
+      font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.15s;
+    }
+    .mode-btn.active { background: #0284c7; color: #fff; box-shadow: 0 2px 8px var(--accent-glow); }
+
+    /* Path Walk Panel */
+    #panelPathWalk { display: flex; flex-direction: column; gap: 6px; }
+    .path-big-btn {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border: 1.5px solid #38bdf8; color: #fff; font-size: 13px; font-weight: 800;
+      padding: 12px; border-radius: 10px; cursor: pointer; text-align: center;
+      box-shadow: 0 4px 16px var(--accent-glow); display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .path-big-btn.paused { background: linear-gradient(135deg, #d97706, #b45309); border-color: #fbbf24; }
+
+    /* Manual Steer Panel */
+    #panelManual { display: none; flex-direction: column; gap: 6px; }
+    .walk-dpad {
+      display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 6px; align-items: center;
+    }
+    .dpad-btn {
+      background: #1e293b; border: 1px solid #334155; color: #f8fafc;
+      padding: 11px 0; border-radius: 8px; font-size: 11.5px; font-weight: 700;
+      cursor: pointer; text-align: center; user-select: none;
+    }
+    .dpad-btn:active, .dpad-btn.pressed { background: #0284c7; border-color: #38bdf8; transform: scale(0.97); }
+    .fwd-btn { background: linear-gradient(135deg, #0284c7, #0369a1); border-color: #38bdf8; font-size: 12px; font-weight: 800; }
+
+    /* Speed Selector */
+    .speed-row { display: flex; align-items: center; justify-content: space-between; font-size: 9.5px; color: #94a3b8; }
+    .speed-btns { display: flex; gap: 4px; }
+    .sp-btn {
+      padding: 3px 7px; font-size: 9.5px; font-weight: 700; background: #1e293b;
+      border: 1px solid #334155; border-radius: 5px; color: #cbd5e1; cursor: pointer;
+    }
+    .sp-btn.active { background: #0284c7; border-color: #38bdf8; color: #fff; }
+
+    /* Actions Row */
+    .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .act-btn {
+      padding: 8px; font-size: 10px; font-weight: 700; border-radius: 7px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
+      background: rgba(30, 41, 59, 0.7); border: 1px solid var(--border); color: #cbd5e1;
+    }
+    .act-btn.refill { border-color: #38bdf8; color: #38bdf8; }
+    .act-btn.hab { border-color: #10b981; color: #10b981; }
+    .act-btn:active { background: #334155; }
+  </style>
+</head>
+<body>
+  <div id="phoneContainer">
+    <!-- Top Telemetry Header -->
+    <div class="top-header">
+      <div class="brand">
+        <span class="nasa-badge">NASA</span>
+        <span>EVA PDD GYRO</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div id="mGnnBadge" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(148,163,184,0.15);color:#94a3b8;border:1px solid rgba(148,163,184,0.25);">
+          GNN: OFFLINE
+        </div>
+        <div class="conn-pill" id="connBadge">
+          <div class="conn-dot" id="connDot"></div>
+          <span id="connText">CONNECTING...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Warning (Only on insecure HTTP) -->
+    <div id="securityNotice">
+      ⚠️ <strong>Insecure HTTP:</strong> Mobile browsers restrict gyroscope hardware over plain HTTP.<br/>
+      <a id="linkSwitchHttps" href="#">🔒 Tap here to switch to HTTPS (port 8443)</a>
+    </div>
+
+    <!-- Live Sensor Diagnostics Bar -->
+    <div class="diag-bar">
+      <div class="diag-row">
+        <span>SENSORS: <strong id="diagSensorState" style="color:var(--warn);">INITIALIZING...</strong></span>
+        <span id="diagRate" class="diag-val">0 Hz</span>
+      </div>
+      <div class="diag-row">
+        <span>LIVE YAW / PITCH / ROLL:</span>
+        <span id="diagYPR" class="diag-val">0.0° / 0.0° / 0.0°</span>
+      </div>
+      <div class="diag-row">
+        <span>RELAY TRANSPORT: <span id="diagTransport" style="color:var(--accent);">WS</span></span>
+        <span>TX PACKETS: <span id="diagTxCount" class="diag-val">0</span></span>
+      </div>
+    </div>
+
+    <!-- Gyro Activation & Tare Calibration Tray -->
+    <div class="gyro-action-box">
+      <div style="font-size:11px;font-weight:700;color:#f8fafc;">📱 Precision Motion Gyroscope &amp; Compass</div>
+      <div class="btn-row">
+        <button class="gyro-btn" id="btnActivateSensors" onclick="activateSensors()">⚡ Activate Gyroscope</button>
+        <button class="secondary-btn" onclick="tareForward()">🎯 Tare Forward</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:9.5px;color:#94a3b8;">
+        <span>Offset: <strong id="lblOffset" style="color:var(--accent);">0°</strong></span>
+        <button style="background:none;border:none;color:#94a3b8;font-size:9.5px;text-decoration:underline;cursor:pointer;" onclick="resetTare()">↺ Reset North</button>
+      </div>
+    </div>
+
+    <!-- PFD & Compass Row -->
+    <div class="pfd-grid">
+      <!-- Artificial Horizon -->
+      <div class="tele-card">
+        <div class="card-title">Artificial Horizon (PFD)</div>
+        <div id="horizonBox">
+          <div id="horizonSky"></div>
+          <div class="horizon-reticle"><div class="reticle-center"></div></div>
+          <div class="horizon-meta">
+            <span id="pfdPitch">P: 0°</span>
+            <span id="pfdRoll">R: 0°</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compass Rose -->
+      <div class="tele-card">
+        <div class="card-title">Digital Compass (Yaw)</div>
+        <div id="compassBox">
+          <div id="compassDial">
+            <span class="compass-mark mark-n">N</span>
+            <span class="compass-mark mark-e">E</span>
+            <span class="compass-mark mark-s">S</span>
+            <span class="compass-mark mark-w">W</span>
+            <div class="compass-needle"></div>
+          </div>
+          <div class="compass-val" id="compassDeg">0° N</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual Touch Heading Slider (Fallback/Tuning) -->
+    <div class="slider-wrap">
+      <div class="slider-lbl">
+        <span>MANUAL AZIMUTH / TOUCH DIAL:</span>
+        <span id="sliderDeg" style="color:var(--accent);font-weight:700;">0° [N]</span>
+      </div>
+      <input type="range" id="headingSlider" min="0" max="359" value="0" oninput="onManualHeadingInput(this.value)" />
+    </div>
+
+    <!-- Live O2 & Status Mirrored From PC -->
+    <div class="status-card">
+      <div class="o2-row">
+        <span>O₂ Life Support Tank</span>
+        <span id="o2Val" style="color:var(--ok);">25.00 / 25.00 L</span>
+      </div>
+      <div class="o2-bar-track"><div class="o2-bar-fill" id="o2Fill"></div></div>
+      <div class="tele-metrics">
+        <div class="metric-item">
+          <div>ELEVATION</div>
+          <div class="metric-val" id="elevVal">+22.3 m</div>
+        </div>
+        <div class="metric-item">
+          <div>PAYLOAD</div>
+          <div class="metric-val" id="loadVal">65 + 30 kg</div>
+        </div>
+        <div class="metric-item">
+          <div>PNR STATUS</div>
+          <div class="metric-val" id="pnrVal" style="color:var(--ok);">SAFE (1.15×)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Motion Controls Card -->
+    <div class="controls-card">
+      <div class="mode-switch">
+        <button id="btnModePath" class="mode-btn active" onclick="setControllerMode('path')">TRAVERSE PATH</button>
+        <button id="btnModeManual" class="mode-btn" onclick="setControllerMode('manual')">FREE ROAM</button>
+      </div>
+
+      <!-- Mode 1: Auto Path Walking -->
+      <div id="panelPathWalk">
+        <button id="btnPlayPath" class="path-big-btn" onclick="togglePathWalk()">
+          <span id="pathPlayIcon">▶</span>
+          <span id="pathPlayText">WALK THROUGH PATH</span>
+        </button>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;align-items:center;">
+          <span>Progress: <strong id="pathPct" style="color:#f8fafc;">0%</strong> (<span id="pathDist">0m</span>)</span>
+          <button style="background:none;border:none;color:var(--accent);font-size:10.5px;font-weight:700;cursor:pointer;" onclick="resetMissionOnPC()">↺ Reset Hab</button>
+        </div>
+      </div>
+
+      <!-- Mode 2: Free Roam D-Pad / Gyro Walk -->
+      <div id="panelManual">
+        <div class="walk-dpad">
+          <button class="dpad-btn" onclick="stepTurn(-15)">↺ -15°</button>
+          <button class="dpad-btn fwd-btn" id="fwdBtn"
+                  ontouchstart="startWalking(1)" ontouchend="stopWalking()"
+                  onmousedown="startWalking(1)" onmouseup="stopWalking()">
+            ▲ WALK FORWARD
+          </button>
+          <button class="dpad-btn" onclick="stepTurn(15)">+15° ↻</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button class="dpad-btn" id="revBtn"
+                  ontouchstart="startWalking(-1)" ontouchend="stopWalking()"
+                  onmousedown="startWalking(-1)" onmouseup="stopWalking()">
+            ▼ REVERSE
+          </button>
+          <button class="dpad-btn" onclick="toggleWalkHold()">
+            <span id="holdWalkText">🔒 TOGGLE WALK</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Walk Speed Selector -->
+      <div class="speed-row">
+        <span>EVA WALK SPEED:</span>
+        <div class="speed-btns">
+          <button class="sp-btn active" onclick="setSpeed(1.0, this)">1× (1.1 m/s)</button>
+          <button class="sp-btn" onclick="setSpeed(2.5, this)">2.5×</button>
+          <button class="sp-btn" onclick="setSpeed(5.0, this)">5×</button>
+        </div>
+      </div>
+
+      <!-- Actions Row -->
+      <div class="actions-row">
+        <button class="act-btn refill" onclick="sendQuickCommand('refill')">
+          ⚡ REFILL AT DEPOT
+        </button>
+        <button class="act-btn hab" onclick="sendQuickCommand('camera_follow')">
+          🎯 LOCK 3D CAMERA
+        </button>
+      </div>
+
+      <!-- Scout Nearby Rover Photos Trigger -->
+      <button id="btnPhoneScoutPhotos" class="act-btn" onclick="scoutNearbyPhotosPhone()" style="padding:10px;font-size:11.5px;font-weight:800;border-color:var(--accent);color:#f8fafc;background:linear-gradient(135deg,rgba(56,189,248,0.25),rgba(2,132,199,0.35));box-shadow:0 4px 14px var(--accent-glow);display:flex;align-items:center;justify-content:center;gap:6px;">
+        📷 SCOUT NEARBY MARS PHOTOS
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Pop-up Carousel Gallery Modal -->
+  <div id="phoneGalleryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(6,10,20,0.96);backdrop-filter:blur(18px);z-index:99999;flex-direction:column;justify-content:space-between;padding:env(safe-area-inset-top, 10px) 12px env(safe-area-inset-bottom, 10px);box-sizing:border-box;">
+    <!-- Top Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:14px;">📷</span>
+        <span style="font-size:12px;font-weight:800;color:#f8fafc;letter-spacing:0.03em;">PERSEVERANCE PHOTO SCOUT</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(56,189,248,0.15);padding:2px 7px;border-radius:4px;">
+          <span id="mPgIdx">1</span> / <span id="mPgTotal">6</span>
+        </span>
+        <button onclick="closePhoneGallery()" style="background:none;border:none;color:#94a3b8;font-size:22px;line-height:1;cursor:pointer;padding:2px 8px;">✕</button>
+      </div>
+    </div>
+
+    <!-- Main Image Carousel Stage with Touch Swipe -->
+    <div id="mPgStage" style="position:relative;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:8px 0;background:#030712;border-radius:10px;border:1px solid #1e293b;">
+      <img id="mPgImg" src="" alt="Mars Ground View" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;transition:opacity 0.2s;" />
+
+      <!-- Left / Right Touch Floating Controls -->
+      <button onclick="prevPhoneGallery()" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;background:rgba(15,23,42,0.85);border:1.5px solid var(--accent);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.8);">‹</button>
+      <button onclick="nextPhoneGallery()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;background:rgba(15,23,42,0.85);border:1.5px solid var(--accent);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.8);">›</button>
+
+      <!-- Sol & Distance Chip -->
+      <div style="position:absolute;top:8px;left:8px;display:flex;gap:5px;">
+        <span id="mPgSol" style="font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(15,23,42,0.85);color:var(--gold);border:1px solid rgba(251,191,36,0.3);">SOL --</span>
+        <span id="mPgDist" style="font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,0.25);color:var(--ok);border:1px solid rgba(16,185,129,0.4);">-- m away</span>
+      </div>
+    </div>
+
+    <!-- Bottom Meta Details -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:9px 10px;display:flex;flex-direction:column;gap:5px;">
+      <div id="mPgTitle" style="font-size:11.5px;font-weight:800;color:#f8fafc;line-height:1.3;">Perseverance Mastcam-Z Photo</div>
+      <div id="mPgCaption" style="font-size:10px;color:#94a3b8;line-height:1.3;">Jezero Crater surface ground observation</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:9.5px;color:#cbd5e1;padding-top:4px;border-top:1px solid rgba(148,163,184,0.15);">
+        <span>Cam: <strong id="mPgCam" style="color:var(--accent);">Mastcam-Z</strong></span>
+        <span>Coords: <strong id="mPgCoords" style="color:#fff;">(77.45°, 18.44°)</strong></span>
+        <a id="mPgLink" href="#" target="_blank" style="color:var(--accent);text-decoration:underline;">NASA Raw ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let rawHeading = 0.0;
+    let headingOffset = 0.0;
+    let effectiveHeading = 0.0;
+    let alpha = 0.0, beta = 0.0, gamma = 0.0;
+    let walkDirection = 0; // -1, 0, 1
+    let walkSpeed = 1.0;
+    let isWalkHolding = false;
+    let controllerMode = "path";
+    let isPathWalking = false;
+
+    // Networking
+    let ws = null;
+    let isConnected = false;
+    let txPacketCount = 0;
+    let lastSendTime = 0;
+    let sensorEventCount = 0;
+    let lastSensorFpsCalc = performance.now();
+    let sensorFps = 0;
+    let activeSensorName = "None";
+
+    const host = window.location.hostname || "localhost";
+    const isHttps = window.location.protocol === "https:";
+    const httpPort = 8080;
+    const httpsPort = 8443;
+    const wsPort = 8081;
+    const wssPort = 8444;
+
+    // WebSocket URL & HTTP API URLs
+    const wsUrl = isHttps ? `wss://${host}:${wssPort}` : `ws://${host}:${wsPort}`;
+    const httpApiUrl = `${window.location.protocol}//${window.location.host}/api/telemetry`;
+
+    // 1. Context & Insecure Warning Check
+    const isSecure = window.isSecureContext || isHttps || host === "localhost" || host === "127.0.0.1";
+    const secNotice = document.getElementById("securityNotice");
+    const linkSwitchHttps = document.getElementById("linkSwitchHttps");
+    if (!isSecure && secNotice) {
+      secNotice.style.display = "block";
+      const targetHttps = `https://${host}:${httpsPort}/phone.html`;
+      linkSwitchHttps.href = targetHttps;
+      linkSwitchHttps.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = targetHttps;
+      };
+    }
+
+    // 2. WebSocket & Telemetry Communication
+    function connectWebSocket() {
+      try {
+        ws = new WebSocket(wsUrl);
+        ws.onopen = () => {
+          isConnected = true;
+          updateConnStatus(true, isHttps ? "WSS" : "WS");
+          sendTelemetry({ source: "phone_hello" });
+        };
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            handleInboundMessage(msg);
+          } catch (e) { console.error(e); }
+        };
+        ws.onclose = () => {
+          isConnected = false;
+          updateConnStatus(false);
+          setTimeout(connectWebSocket, 2000);
+        };
+        ws.onerror = () => {
+          isConnected = false;
+          updateConnStatus(false);
+          try { ws.close(); } catch(e){}
+        };
+      } catch (err) {
+        isConnected = false;
+        updateConnStatus(false);
+        setTimeout(connectWebSocket, 2500);
+      }
+    }
+
+    // HTTP Polling Fallback (ensures 100% sync even if WS fails)
+    async function pollHttpTelemetry() {
+      try {
+        const res = await fetch(httpApiUrl, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (!isConnected) {
+            updateConnStatus(true, "HTTP Poll");
+          }
+          handleInboundMessage(data);
+        }
+      } catch (e) {}
+    }
+    setInterval(pollHttpTelemetry, 120);
+
+    function updateConnStatus(connected, transportName = "WS") {
+      const badge = document.getElementById("connBadge");
+      const dot = document.getElementById("connDot");
+      const text = document.getElementById("connText");
+      const trEl = document.getElementById("diagTransport");
+      if (trEl) trEl.textContent = transportName;
+
+      if (connected) {
+        badge.style.background = "rgba(16, 185, 129, 0.15)";
+        badge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+        badge.style.color = "var(--ok)";
+        dot.style.background = "var(--ok)";
+        text.textContent = `SYNCED (${transportName})`;
+      } else {
+        badge.style.background = "rgba(244, 63, 94, 0.15)";
+        badge.style.borderColor = "rgba(244, 63, 94, 0.3)";
+        badge.style.color = "var(--err)";
+        dot.style.background = "var(--err)";
+        text.textContent = "RECONNECTING...";
+      }
+    }
+
+    function sendTelemetry(extra = {}) {
+      txPacketCount++;
+      const payload = {
+        type: "phone_input",
+        heading: parseFloat(effectiveHeading.toFixed(1)),
+        raw_heading: parseFloat(rawHeading.toFixed(1)),
+        offset: parseFloat(headingOffset.toFixed(1)),
+        alpha: parseFloat(alpha.toFixed(1)),
+        beta: parseFloat(beta.toFixed(1)),
+        gamma: parseFloat(gamma.toFixed(1)),
+        walk: walkDirection,
+        speed: walkSpeed,
+        mode: controllerMode,
+        sensor: activeSensorName,
+        seq: txPacketCount,
+        timestamp: Date.now(),
+        ...extra
+      };
+
+      const diagTx = document.getElementById("diagTxCount");
+      if (diagTx) diagTx.textContent = txPacketCount;
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(payload));
+      } else {
+        fetch(httpApiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }).catch(() => {});
+      }
+    }
+
+    // Keepalive heartbeat every 150ms
+    setInterval(() => {
+      const now = performance.now();
+      if (now - lastSendTime > 140) {
+        lastSendTime = now;
+        sendTelemetry();
+      }
+    }, 150);
+
+    function handleInboundMessage(msg) {
+      if (!msg) return;
+      const d = msg.pc || (msg.type === "pc_telemetry" ? msg : (msg.data && msg.data.pc ? msg.data.pc : msg.data));
+      if (!d) return;
+
+      if (d.currO2 !== undefined && d.tankCapacityL !== undefined) {
+        const pct = Math.max(0, Math.min(100, (d.currO2 / d.tankCapacityL) * 100));
+        document.getElementById("o2Val").textContent = `${d.currO2.toFixed(2)} / ${d.tankCapacityL.toFixed(2)} L`;
+        const fill = document.getElementById("o2Fill");
+        fill.style.width = `${pct}%`;
+        fill.style.background = pct > 45 ? "var(--ok)" : (pct > 20 ? "var(--warn)" : "var(--err)");
+      }
+      if (d.elevLocal !== undefined) {
+        document.getElementById("elevVal").textContent = `+${d.elevLocal.toFixed(1)} m`;
+      }
+      if (d.selectedCoords && d.selectedCoords.lon) {
+        currentRoverLon = d.selectedCoords.lon;
+        currentRoverLat = d.selectedCoords.lat;
+        const btn = document.getElementById("btnPhoneScoutPhotos");
+        if (btn && d.selectedCoords.label) {
+          btn.innerHTML = `📷 SCOUT PHOTOS (${d.selectedCoords.label.slice(0, 18).toUpperCase()})`;
+        }
+      } else if (d.lon !== undefined && d.lat !== undefined) {
+        currentRoverLon = d.lon;
+        currentRoverLat = d.lat;
+      }
+      if (d.gnnState) {
+        const mGnn = document.getElementById("mGnnBadge");
+        if (mGnn) {
+          if (d.gnnState.online && d.gnnState.enabled) {
+            mGnn.textContent = "GNN: LIVE (L40)";
+            mGnn.style.background = "rgba(16, 185, 129, 0.2)";
+            mGnn.style.color = "var(--ok)";
+            mGnn.style.borderColor = "rgba(16, 185, 129, 0.4)";
+          } else if (d.gnnState.online) {
+            mGnn.textContent = "GNN: STANDBY";
+            mGnn.style.background = "rgba(245, 158, 11, 0.2)";
+            mGnn.style.color = "var(--gold)";
+            mGnn.style.borderColor = "rgba(245, 158, 11, 0.4)";
+          } else {
+            mGnn.textContent = "GNN: OFFLINE";
+            mGnn.style.background = "rgba(148, 163, 184, 0.15)";
+            mGnn.style.color = "#94a3b8";
+            mGnn.style.borderColor = "rgba(148, 163, 184, 0.25)";
+          }
+        }
+      }
+      if (d.carriedSampleKg !== undefined) {
+        document.getElementById("loadVal").textContent = `65 + ${d.carriedSampleKg} kg`;
+      }
+      if (d.pnrStatus) {
+        const pnrEl = document.getElementById("pnrVal");
+        pnrEl.textContent = d.pnrStatus;
+        pnrEl.style.color = d.pnrStatus.includes("SAFE") ? "var(--ok)" : "var(--err)";
+      }
+      if (d.pathProgress !== undefined) {
+        document.getElementById("pathPct").textContent = `${(d.pathProgress * 100).toFixed(0)}%`;
+        if (d.pathDist !== undefined) document.getElementById("pathDist").textContent = `${d.pathDist.toFixed(0)}m`;
+      }
+      if (d.isPathWalking !== undefined) {
+        isPathWalking = d.isPathWalking;
+        updatePathPlayButton();
+      }
+    }
+
+    // 3. Multi-Sensor Architecture & Calibration
+    async function activateSensors() {
+      const btn = document.getElementById("btnActivateSensors");
+      btn.textContent = "⌛ Activating...";
+
+      // iOS 13+ permission workflow
+      if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+        try {
+          const resp = await DeviceOrientationEvent.requestPermission();
+          if (resp !== "granted") {
+            alert("iOS Gyroscope permission was not granted. Please check Settings -> Safari -> Motion & Orientation.");
+          }
+        } catch (err) {
+          console.warn("DeviceOrientationEvent.requestPermission:", err);
+        }
+      }
+      if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
+        try { await DeviceMotionEvent.requestPermission(); } catch (e) {}
+      }
+
+      startSensorListeners();
+      btn.textContent = "✓ Gyro Active";
+      btn.style.background = "#10b981";
+      btn.style.borderColor = "#34d399";
+    }
+
+    let listenersAttached = false;
+    function startSensorListeners() {
+      if (listenersAttached) return;
+      listenersAttached = true;
+
+      // Listener 1: Android Chrome Absolute Orientation (True Compass)
+      if ("ondeviceorientationabsolute" in window) {
+        window.addEventListener("deviceorientationabsolute", (e) => {
+          handleOrientationEvent(e, "Chrome-Absolute");
+        }, true);
+      }
+
+      // Listener 2: Standard DeviceOrientation (iOS webkitCompassHeading / Alpha)
+      window.addEventListener("deviceorientation", (e) => {
+        handleOrientationEvent(e, "Standard-Orientation");
+      }, true);
+
+      // Listener 3: Generic Sensor API (AbsoluteOrientationSensor)
+      if ("AbsoluteOrientationSensor" in window) {
+        try {
+          const sensor = new AbsoluteOrientationSensor({ frequency: 60 });
+          sensor.addEventListener("reading", () => {
+            if (!sensor.quaternion) return;
+            const [x, y, z, w] = sensor.quaternion;
+            // Roll, pitch, yaw from quaternion
+            const rollRad = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+            const pitchRad = Math.asin(Math.max(-1, Math.min(1, 2 * (w * y - z * x))));
+            const yawRad = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+
+            let deg = ((-yawRad * 180 / Math.PI) % 360 + 360) % 360;
+            processSensorData(deg, pitchRad * 180 / Math.PI, rollRad * 180 / Math.PI, "GenericSensor");
+          });
+          sensor.start();
+        } catch (err) {
+          console.warn("GenericSensor error:", err);
+        }
+      }
+
+      // Listener 4: Accelerometer Fallback (Tilt only)
+      window.addEventListener("devicemotion", (e) => {
+        if (!e.accelerationIncludingGravity) return;
+        const ax = e.accelerationIncludingGravity.x || 0;
+        const ay = e.accelerationIncludingGravity.y || 0;
+        const az = e.accelerationIncludingGravity.z || 0;
+        if (sensorEventCount === 0) {
+          const pitch = Math.atan2(-ay, Math.sqrt(ax * ax + az * az)) * (180 / Math.PI);
+          const roll = Math.atan2(ax, az) * (180 / Math.PI);
+          beta = pitch;
+          gamma = roll;
+          updatePFDAndCompass();
+        }
+      }, true);
+    }
+
+    function handleOrientationEvent(event, srcName) {
+      let deg = null;
+
+      // 1. iOS Native Compass Heading (0 = North, 90 = East)
+      if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
+        deg = event.webkitCompassHeading;
+      }
+      // 2. Android Absolute Compass (alpha)
+      else if (event.alpha !== null && event.alpha !== undefined) {
+        deg = (360 - event.alpha) % 360;
+      }
+
+      if (deg === null && event.beta === null && event.gamma === null) return;
+
+      const p = event.beta || 0;
+      const r = event.gamma || 0;
+      processSensorData(deg !== null ? deg : rawHeading, p, r, srcName);
+    }
+
+    function processSensorData(yawDeg, pitchDeg, rollDeg, srcName) {
+      sensorEventCount++;
+      activeSensorName = srcName;
+
+      rawHeading = (yawDeg % 360 + 360) % 360;
+      beta = pitchDeg;
+      gamma = rollDeg;
+
+      // Compute Effective Heading with Tare Offset
+      effectiveHeading = ((rawHeading - headingOffset) % 360 + 360) % 360;
+
+      // Compute Sensor Rate (Hz)
+      const now = performance.now();
+      if (now - lastSensorFpsCalc >= 1000) {
+        sensorFps = sensorEventCount;
+        sensorEventCount = 0;
+        lastSensorFpsCalc = now;
+        const rateEl = document.getElementById("diagRate");
+        if (rateEl) rateEl.textContent = `${sensorFps} Hz`;
+      }
+
+      // Update Diagnostics HUD
+      const diagState = document.getElementById("diagSensorState");
+      if (diagState) {
+        diagState.textContent = `ACTIVE (${srcName})`;
+        diagState.style.color = "var(--ok)";
+      }
+      const diagYPR = document.getElementById("diagYPR");
+      if (diagYPR) {
+        diagYPR.textContent = `${effectiveHeading.toFixed(1)}° / ${beta.toFixed(1)}° / ${gamma.toFixed(1)}°`;
+      }
+
+      updatePFDAndCompass();
+
+      // Throttled transmission ~35 Hz
+      if (now - lastSendTime > 28) {
+        lastSendTime = now;
+        sendTelemetry();
+      }
+    }
+
+    // Tare Calibration: set current physical orientation to 0° Mars Forward
+    function tareForward() {
+      headingOffset = rawHeading;
+      effectiveHeading = 0.0;
+      document.getElementById("lblOffset").textContent = `${headingOffset.toFixed(0)}°`;
+      updatePFDAndCompass();
+      sendTelemetry({ command: "tare_zero" });
+    }
+
+    function resetTare() {
+      headingOffset = 0.0;
+      effectiveHeading = rawHeading;
+      document.getElementById("lblOffset").textContent = `0°`;
+      updatePFDAndCompass();
+      sendTelemetry({ command: "tare_reset" });
+    }
+
+    function onManualHeadingInput(val) {
+      effectiveHeading = parseFloat(val);
+      rawHeading = effectiveHeading;
+      headingOffset = 0.0;
+      document.getElementById("lblOffset").textContent = `0°`;
+      updatePFDAndCompass();
+      sendTelemetry();
+    }
+
+    function updatePFDAndCompass() {
+      // 1. Compass Rose
+      const dial = document.getElementById("compassDial");
+      if (dial) dial.style.transform = `rotate(${-effectiveHeading}deg)`;
+      const cardDirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+      const dirIdx = Math.round(effectiveHeading / 45) % 8;
+      const degText = `${effectiveHeading.toFixed(0)}° ${cardDirs[dirIdx]}`;
+      document.getElementById("compassDeg").textContent = degText;
+      document.getElementById("sliderDeg").textContent = degText;
+      const slider = document.getElementById("headingSlider");
+      if (slider && document.activeElement !== slider) slider.value = Math.round(effectiveHeading);
+
+      // 2. Artificial Horizon PFD
+      const sky = document.getElementById("horizonSky");
+      if (sky) {
+        const clampedPitch = Math.max(-45, Math.min(45, beta));
+        sky.style.transform = `translateY(${clampedPitch * 1.1}px) rotate(${-gamma}deg)`;
+      }
+      document.getElementById("pfdPitch").textContent = `P: ${beta.toFixed(0)}°`;
+      document.getElementById("pfdRoll").textContent = `R: ${gamma.toFixed(0)}°`;
+    }
+
+    // 4. Motion Controls
+    function setControllerMode(mode) {
+      controllerMode = mode;
+      document.getElementById("btnModePath").classList.toggle("active", mode === "path");
+      document.getElementById("btnModeManual").classList.toggle("active", mode === "manual");
+      document.getElementById("panelPathWalk").style.display = mode === "path" ? "flex" : "none";
+      document.getElementById("panelManual").style.display = mode === "manual" ? "flex" : "none";
+      sendTelemetry({ command: "set_mode", mode });
+    }
+
+    function togglePathWalk() {
+      isPathWalking = !isPathWalking;
+      updatePathPlayButton();
+      sendTelemetry({ command: isPathWalking ? "walk_path_start" : "walk_path_pause" });
+    }
+
+    function updatePathPlayButton() {
+      const btn = document.getElementById("btnPlayPath");
+      const icon = document.getElementById("pathPlayIcon");
+      const txt = document.getElementById("pathPlayText");
+      if (isPathWalking) {
+        btn.classList.add("paused");
+        icon.textContent = "❚❚";
+        txt.textContent = "PAUSE PATH TRAVERSE";
+      } else {
+        btn.classList.remove("paused");
+        icon.textContent = "▶";
+        txt.textContent = "WALK THROUGH PATH";
+      }
+    }
+
+    function resetMissionOnPC() {
+      sendTelemetry({ command: "reset_eva" });
+    }
+
+    function startWalking(dir) {
+      walkDirection = dir;
+      sendTelemetry({ command: "walk_continuous", walk: dir });
+    }
+
+    function stopWalking() {
+      if (!isWalkHolding) {
+        walkDirection = 0;
+        sendTelemetry({ command: "walk_stop", walk: 0 });
+      }
+    }
+
+    function toggleWalkHold() {
+      isWalkHolding = !isWalkHolding;
+      walkDirection = isWalkHolding ? 1 : 0;
+      document.getElementById("holdWalkText").textContent = isWalkHolding ? "🔓 STOP WALK" : "🔒 TOGGLE WALK";
+      document.getElementById("fwdBtn").classList.toggle("pressed", isWalkHolding);
+      sendTelemetry({ command: isWalkHolding ? "walk_continuous" : "walk_stop", walk: walkDirection });
+    }
+
+    function stepTurn(deg) {
+      effectiveHeading = (effectiveHeading + deg + 360) % 360;
+      updatePFDAndCompass();
+      sendTelemetry();
+    }
+
+    function setSpeed(spd, el) {
+      walkSpeed = spd;
+      document.querySelectorAll(".sp-btn").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
+      sendTelemetry({ command: "set_speed", speed: spd });
+    }
+
+    function sendQuickCommand(cmd) {
+      sendTelemetry({ command: cmd });
+    }
+
+    // 5. Mobile Pop-up Carousel Gallery Engine (NASA Mars 2020 Raw Feed)
+    let currentRoverLon = 77.4526;
+    let currentRoverLat = 18.4449;
+    let phoneGalleryImages = [];
+    let phoneGalleryIndex = 0;
+    let isFetchingPhoneGallery = false;
+
+    async function scoutNearbyPhotosPhone() {
+      if (isFetchingPhoneGallery) return;
+      isFetchingPhoneGallery = true;
+
+      const modal = document.getElementById("phoneGalleryModal");
+      const titleEl = document.getElementById("mPgTitle");
+      const captEl = document.getElementById("mPgCaption");
+
+      if (modal) modal.style.display = "flex";
+      if (titleEl) titleEl.textContent = "Scouting Nearby NASA Photos...";
+      if (captEl) captEl.textContent = `Querying coordinates (${currentRoverLon.toFixed(4)}°, ${currentRoverLat.toFixed(4)}°)...`;
+
+      const nearbyApi = `/api/nearby-images?lon=${currentRoverLon}&lat=${currentRoverLat}&count=8`;
+
+      try {
+        const res = await fetch(nearbyApi, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.images && data.images.length > 0) {
+            phoneGalleryImages = data.images;
+            phoneGalleryIndex = 0;
+            updatePhoneGalleryUI();
+          } else {
+            if (titleEl) titleEl.textContent = "No Photos Found Nearby";
+            if (captEl) captEl.textContent = "No rover observations found within range of this point.";
+          }
+        } else {
+          if (titleEl) titleEl.textContent = "Server Request Error";
+        }
+      } catch (err) {
+        if (titleEl) titleEl.textContent = "Network Error";
+        if (captEl) captEl.textContent = String(err);
+      } finally {
+        isFetchingPhoneGallery = false;
+      }
+    }
+
+    function closePhoneGallery() {
+      const modal = document.getElementById("phoneGalleryModal");
+      if (modal) modal.style.display = "none";
+    }
+
+    function prevPhoneGallery() {
+      if (phoneGalleryImages.length <= 1) return;
+      phoneGalleryIndex = (phoneGalleryIndex - 1 + phoneGalleryImages.length) % phoneGalleryImages.length;
+      updatePhoneGalleryUI();
+    }
+
+    function nextPhoneGallery() {
+      if (phoneGalleryImages.length <= 1) return;
+      phoneGalleryIndex = (phoneGalleryIndex + 1) % phoneGalleryImages.length;
+      updatePhoneGalleryUI();
+    }
+
+    function updatePhoneGalleryUI() {
+      if (!phoneGalleryImages || phoneGalleryImages.length === 0) return;
+      const item = phoneGalleryImages[phoneGalleryIndex];
+
+      document.getElementById("mPgIdx").textContent = phoneGalleryIndex + 1;
+      document.getElementById("mPgTotal").textContent = phoneGalleryImages.length;
+
+      const img = document.getElementById("mPgImg");
+      img.referrerPolicy = "no-referrer";
+      img.style.opacity = "0.2";
+      img.onload = () => { img.style.opacity = "1"; };
+
+      let retryState = 0;
+      img.onerror = () => {
+        if (retryState === 0) {
+          retryState = 1;
+          img.src = item.proxy_url || `/api/image-proxy?url=${encodeURIComponent(item.img_url)}`;
+          return;
+        } else if (retryState === 1 && item.backup_url) {
+          retryState = 2;
+          img.src = `/api/image-proxy?url=${encodeURIComponent(item.backup_url)}`;
+          return;
+        } else {
+          img.src = "/api/image-proxy?url=" + encodeURIComponent("https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00065/ids/edr/browse/ncam/NLM_0065_0672719266_543ECM_N0032122TRAV12006_01_2LLJ01_1200.jpg");
+          img.style.opacity = "1";
+        }
+      };
+      img.src = item.img_url;
+
+      document.getElementById("mPgTitle").textContent = item.title || `Perseverance Sol ${item.sol}`;
+      document.getElementById("mPgCaption").textContent = item.caption || "Surface ground-truth observation";
+      document.getElementById("mPgSol").textContent = `SOL ${item.sol}`;
+      document.getElementById("mPgDist").textContent = `${item.distance_m.toFixed(1)} m away`;
+      document.getElementById("mPgCam").textContent = item.camera || "Rover Camera";
+      document.getElementById("mPgCoords").textContent = `(${item.lon.toFixed(4)}°, ${item.lat.toFixed(4)}°)`;
+
+      const link = document.getElementById("mPgLink");
+      if (link) {
+        link.href = item.source_url || `https://mars.nasa.gov/mars2020/multimedia/raw-images/?id=${item.id}`;
+      }
+    }
+
+    // Touch Swipe on mobile stage
+    let touchStartX = 0, touchEndX = 0;
+    const stageEl = document.getElementById("mPgStage");
+    if (stageEl) {
+      stageEl.addEventListener("touchstart", (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+      stageEl.addEventListener("touchend", (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        if (touchEndX - touchStartX > 40) prevPhoneGallery();
+        else if (touchStartX - touchEndX > 40) nextPhoneGallery();
+      }, { passive: true });
+    }
+
+    // Auto-Connect & Auto-Start Sensors
+    connectWebSocket();
+    startSensorListeners();
+
+    // Auto-attempt permission if on iOS Safari without prompt
+    if (typeof DeviceOrientationEvent !== "undefined" && !DeviceOrientationEvent.requestPermission) {
+      startSensorListeners();
+    }
+  </script>
+</body>
+</html>
